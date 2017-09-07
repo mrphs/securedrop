@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+import fcntl
 import inotify_simple
 import logging
 import os
@@ -67,6 +68,8 @@ class Shredder(object):
                 log.error("error ignored, proceeding")
 
     def loop(self):
+        lock = open(self.dir + '.lock', 'w')
+        fcntl.lockf(lock, fcntl.LOCK_EX)
         i = inotify_simple.INotify()
         i.add_watch(
             self.dir,
@@ -79,3 +82,4 @@ class Shredder(object):
             events = i.read()
             log.debug("... inotify woke up {}".format(events))
         i.close()
+        lock.close()
